@@ -19,12 +19,12 @@ public interface MainRepository {
     Observable<List<Message>> getResults(String lastId);
 
 
-    Observable<List<Message>> saveInfoToDB(List<Message> messages);
+    Observable<Message> saveMessageToDB(Message message);
 
 
     Completable connectToServer(String mUsername);
     Completable disconnectFromServer();
-    Completable newMessage(Message message);
+    Observable<Message> newMessage(Message message);
     Completable typing(Message message);
     Completable stopTyping(Message message);
 

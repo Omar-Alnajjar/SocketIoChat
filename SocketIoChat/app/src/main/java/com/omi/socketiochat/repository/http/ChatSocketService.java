@@ -12,7 +12,7 @@ public interface ChatSocketService {
     Completable connectToServer(String mUsername);
     Completable disconnectFromServer();
     Completable connectError();
-    Completable newMessage(Message message);
+    Observable<Message> newMessage(Message message);
     Completable userJoined(Message message);
     Completable userLeft(Message message);
     Completable typing(Message message);

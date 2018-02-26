@@ -9,8 +9,8 @@ app.get('/', function(req, res){
 io.on('connection', function(socket){
   console.log('a user connected');
 
-
-  socket.on('chat message', function(msg){
+  socket.on('chat message', function(msg, fn){
+    fn('Acked');
     console.log('message: ' + msg);
     socket.broadcast.emit('chat message', msg);
   });
@@ -20,12 +20,12 @@ io.on('connection', function(socket){
   });
 
   socket.on('user joined', function(msg){
-    console.log('joined: ' + msg);
+    console.log('joined: ' + msg['username']);
     socket.broadcast.emit('user joined', msg);
   });
 
   socket.on('user left', function(msg){
-    console.log('left: ' + msg);
+    console.log('left: ' + msg['username']);
     socket.broadcast.emit('user left', msg);
   });
 
@@ -36,7 +36,7 @@ io.on('connection', function(socket){
 
   socket.on('stop typing', function(msg){
     console.log('stop typing: ' + msg);
-    socket.broadcast.emit('typing', msg);
+    socket.broadcast.emit('stop typing', msg);
   });
 
 });

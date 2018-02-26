@@ -24,8 +24,8 @@ public class MainModel implements MainActivityMVP.Model {
     }
 
     @Override
-    public Observable<List<Message>> saveData(List<Message> messages) {
-        return repository.saveInfoToDB(messages);
+    public Observable<Message> saveMessage(Message message) {
+        return repository.saveMessageToDB(message);
     }
 
     @Override
@@ -34,23 +34,23 @@ public class MainModel implements MainActivityMVP.Model {
     }
 
     @Override
-    public void disconnectFromServer() {
-        repository.disconnectFromServer();
+    public Completable disconnectFromServer() {
+        return repository.disconnectFromServer();
     }
 
     @Override
-    public void newMessage(Message message) {
-        repository.newMessage(message);
+    public Observable<Message> newMessage(Message message) {
+        return repository.newMessage(message);
     }
 
     @Override
-    public void typing(Message message) {
-        repository.typing(message);
+    public Completable typing(Message message) {
+        return repository.typing(message);
     }
 
     @Override
-    public void stopTyping(Message message) {
-        repository.stopTyping(message);
+    public Completable stopTyping(Message message) {
+        return repository.stopTyping(message);
     }
 
 

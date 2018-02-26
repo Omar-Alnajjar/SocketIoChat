@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.socket.client.Ack;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
@@ -24,6 +25,8 @@ public class ChatSocketServiceImpl implements ChatSocketService{
     private String mUsername;
     private boolean isConnected;
     private static final String TAG = "MainFragment";
+
+    private Emitter.Listener onConnect;
 
     private Emitter.Listener onNewMessage;
     private Emitter.Listener onTyping;
@@ -43,35 +46,22 @@ public class ChatSocketServiceImpl implements ChatSocketService{
 
         App app = (App) (context);
         mSocket = app.getSocket();
-        mSocket.on(Socket.EVENT_CONNECT,onConnect);
         mSocket.on(Socket.EVENT_DISCONNECT,onDisconnect);
         mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
         mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
         mSocket.connect();
-        return Completable.complete();
 
-//        return Completable.create(observableSubscriber -> {
-//            for(File imageFile : imageFiles) {
-//                Uri file = Uri.fromFile(imageFile);
-//                StorageReference childRef = storageReference.child(imageFile.getName());
-//                UploadTask uploadTask = childRef.putFile(file);
-//                // Register observers to listen for when the download is done or if it fails
-//                uploadTask.addOnFailureListener(new OnFailureListener() {
-//                    @Override
-//                    public void onFailure(@NonNull Exception exception) {
-//                        // Handle unsuccessful uploads
-//                        observableSubscriber.onError(exception);
-//                    }
-//                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                    @Override
-//                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//                        // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-//                        observableSubscriber.onNext(taskSnapshot.getDownloadUrl().toString());
-//                    }
-//                });
-//
-//            }
-//        });
+        return Completable.create(completableSubscriber -> {
+            onConnect = new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    isConnected = true;
+                    userJoined(new Message.Builder(Message.TYPE_LOG).username(mUsername).build());
+                    completableSubscriber.onComplete();
+                }
+            };
+            mSocket.on(Socket.EVENT_CONNECT, onConnect);
+        });
     }
 
     @Override
@@ -98,9 +88,17 @@ public class ChatSocketServiceImpl implements ChatSocketService{
     }
 
     @Override
-    public Completable newMessage(Message message) {
-        mSocket.emit("chat message", message.toJsonObject());
-        return null;
+    public Observable<Message> newMessage(Message message) {
+        return Observable.create(observableSubscriber -> {
+            mSocket.emit("chat message", message.toJsonObject(), new Ack() {
+                @Override
+                public void call(Object... args) {
+                    Log.i(TAG, (String) args[0]);
+                    message.setmStatus(Message.STATUS_RECEIVED);
+                    observableSubscriber.onNext(message);
+                }
+            });
+        });
     }
 
     @Override
@@ -249,41 +247,11 @@ public class ChatSocketServiceImpl implements ChatSocketService{
         });
     }
 
-
-    private Emitter.Listener onConnect = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            isConnected = true;
-            userJoined(new Message.Builder(Message.TYPE_LOG).username(mUsername).build());
-            /*((Activity) context).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if(!isConnected) {
-                        if(null!=mUsername)
-                            mSocket.emit("add user", mUsername);
-                        Toast.makeText(context,
-                                R.string.connect, Toast.LENGTH_LONG).show();
-
-
-                    }
-                }
-            });*/
-        }
-    };
-
     private Emitter.Listener onDisconnect = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
             isConnected = false;
             userLeft(new Message.Builder(Message.TYPE_LOG).username(mUsername).build());
-//            ((Activity) context).runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    Log.i(TAG, "diconnected");
-//                    Toast.makeText(context,
-//                            R.string.disconnect, Toast.LENGTH_LONG).show();
-//                }
-//            });
         }
     };
 

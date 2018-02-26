@@ -13,7 +13,7 @@ public class Message  extends RealmObject {
     public static final int TYPE_ACTION = 2;
 
     public static final int STATUS_SENT = 0;
-    public static final int TYPE_RECEIVED = 2;
+    public static final int STATUS_RECEIVED = 2;
 
     @PrimaryKey
     private String mId;
@@ -40,6 +40,13 @@ public class Message  extends RealmObject {
         return mUsername;
     };
 
+    public int getmStatus() {
+        return mStatus;
+    }
+
+    public void setmStatus(int mStatus) {
+        this.mStatus = mStatus;
+    }
 
     public static class Builder {
         private final int mType;

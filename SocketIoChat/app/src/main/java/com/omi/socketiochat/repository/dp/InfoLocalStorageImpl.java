@@ -34,18 +34,18 @@ public class InfoLocalStorageImpl implements InfoLocalStorage {
     }
 
     @Override
-    public Observable<List<Message>> saveInfo(final List<Message> messages) {
+    public Observable<Message> saveMessage(final Message message) {
         Realm realm = Realm.getDefaultInstance();
         try {
             realm.executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
-                    realm.copyToRealmOrUpdate(messages);
+                    realm.copyToRealmOrUpdate(message);
                 }
             });
         }finally {
             realm.close();
         }
-        return Observable.just(messages);
+        return Observable.just(message);
     }
 }

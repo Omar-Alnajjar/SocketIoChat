@@ -12,6 +12,6 @@ import io.reactivex.Observable;
 public interface InfoLocalStorage {
 
     Maybe<List<Message>> getInfo();
-    Observable<List<Message>> saveInfo(List<Message> messages);
+    Observable<Message> saveMessage(Message message);
 
 }

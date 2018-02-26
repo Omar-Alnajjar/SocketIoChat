@@ -21,6 +21,7 @@ public interface MainActivityMVP {
         void addTyping(String username);
         void removeTyping(String username);
         void addMessage(Message message);
+        String getUserName();
 
     }
 
@@ -51,7 +52,7 @@ public interface MainActivityMVP {
     interface Model {
 
         Observable<List<Message>> loadData(String lastId);
-        Observable<List<Message>> saveData(List<Message> messages);
+        Observable<Message> saveMessage(Message message);
 
 
 
@@ -62,11 +63,11 @@ public interface MainActivityMVP {
         Observable<Message> userLeftCallback();
 
         Completable connectToServer(String mUsername);
-        void disconnectFromServer();
+        Completable disconnectFromServer();
 
-        void newMessage(Message message);
-        void typing(Message message);
-        void stopTyping(Message message);
+        Observable<Message> newMessage(Message message);
+        Completable typing(Message message);
+        Completable stopTyping(Message message);
 
         boolean isConnected();
 

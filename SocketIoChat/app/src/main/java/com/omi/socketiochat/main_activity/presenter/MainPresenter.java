@@ -8,6 +8,7 @@ import com.omi.socketiochat.objects.Message;
 import org.reactivestreams.Subscription;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -21,6 +22,7 @@ public class MainPresenter implements MainActivityMVP.Presenter {
     private Subscription subscription = null;
     private MainActivityMVP.Model model;
     private CompositeDisposable disposables;
+    private List<Message> messages;
 
     public MainPresenter(MainActivityMVP.Model model) {
         this.model = model;
@@ -54,10 +56,24 @@ public class MainPresenter implements MainActivityMVP.Presenter {
                     public void onNext(List<Message> messages) {
                         if (view != null && messages != null && messages.size() > 0)  {
                             view.updateData(messages);
-                            model.saveData(messages);
+                            MainPresenter.this.messages = messages;
+                            if(isConnected()){
+                                resendUnReceived();
+                            }
+                            //model.saveMessage(messages);
                         }
                     }
                 }));
+    }
+
+    private void resendUnReceived() {
+        if(messages != null) {
+            for (Message message : messages) {
+                if (message.getUsername().equals(view.getUserName()) && message.getmStatus() == Message.STATUS_SENT) {
+                    model.newMessage(message);
+                }
+            }
+        }
     }
 
     @Override
@@ -80,13 +96,18 @@ public class MainPresenter implements MainActivityMVP.Presenter {
 
                     @Override
                     public void onComplete() {
-                        newMessageCallback();
-                        userJoinedCallback();
-                        userLeftCallback();
-                        typingCallback();
-                        stopTypingCallback();
+                        initCallbacks();
+                        resendUnReceived();
                     }
                 }));
+    }
+
+    private void initCallbacks() {
+        newMessageCallback();
+        userJoinedCallback();
+        userLeftCallback();
+        typingCallback();
+        stopTypingCallback();
     }
 
     @Override
@@ -96,7 +117,34 @@ public class MainPresenter implements MainActivityMVP.Presenter {
 
     @Override
     public void newMessage(Message message) {
-        model.newMessage(message);
+        model.saveMessage(message);
+
+        disposables.add(model.newMessage(message).timeout(5, TimeUnit.SECONDS).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+
+
+                .subscribeWith(new DisposableObserver<Message>() {
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        if (view != null) {
+                            view.showSnackbar("Network error");
+                        }
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+
+
+                    @Override
+                    public void onNext(Message message) {
+                        if (view != null && message != null)  {
+                            model.saveMessage(message);
+                        }
+                    }
+                }));
     }
 
     @Override
@@ -135,6 +183,10 @@ public class MainPresenter implements MainActivityMVP.Presenter {
                         if (view != null && message != null)  {
                             view.removeTyping(message.getUsername());
                             view.addMessage(message);
+                            if(message.getType() == Message.TYPE_MESSAGE) {
+                                message.setmStatus(Message.STATUS_RECEIVED);
+                                model.saveMessage(message);
+                            }
                         }
                     }
                 }));

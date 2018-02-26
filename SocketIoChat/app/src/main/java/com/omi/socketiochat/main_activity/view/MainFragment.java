@@ -128,7 +128,7 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
 
         ((App) getActivity().getApplication()).getComponent().inject(this);
         presenter.setView(this);
-
+        presenter.loadData("");
 
         mMessagesView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mMessagesView.setAdapter(mAdapter);
@@ -198,6 +198,11 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
     }
 
     @Override
+    public String getUserName() {
+        return mUsername;
+    }
+
+    @Override
     public void addTyping(String username) {
         if (mMessages.get(mMessages.size()-1).getType() == Message.TYPE_ACTION && mMessages.get(mMessages.size()-1).getUsername().equals(username)) {
             return;
@@ -220,7 +225,6 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
 
     private void attemptSend() {
         if (null == mUsername) return;
-        if (!presenter.isConnected()) return;
 
         mTyping = false;
 
@@ -239,6 +243,9 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
 
         // perform the sending message attempt.
         presenter.newMessage(message);
+        if (!presenter.isConnected()) {
+            showSnackbar("No Connection, Your messages will be resend once connection retrieved");
+        }
     }
 
     private void scrollToBottom() {
@@ -257,7 +264,9 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
 
     @Override
     public void updateData(List<Message> messages) {
-
+        for (Message message:messages) {
+            addMessage(message);
+        }
     }
 
     @Override

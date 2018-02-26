@@ -39,8 +39,8 @@ public class MainRepositoryImpl implements MainRepository {
     }
 
     @Override
-    public Observable<List<Message>> saveInfoToDB(List<Message> messages) {
-        return infoLocalStorage.saveInfo(messages);
+    public Observable<Message> saveMessageToDB(Message message) {
+        return infoLocalStorage.saveMessage(message);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class MainRepositoryImpl implements MainRepository {
     }
 
     @Override
-    public Completable newMessage(Message message) {
+    public Observable<Message> newMessage(Message message) {
         return chatSocketService.newMessage(message);
     }
 
