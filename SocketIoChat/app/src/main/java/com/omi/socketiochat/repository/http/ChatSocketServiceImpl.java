@@ -96,6 +96,7 @@ public class ChatSocketServiceImpl implements ChatSocketService{
                     Log.i(TAG, (String) args[0]);
                     message.setmStatus(Message.STATUS_RECEIVED);
                     observableSubscriber.onNext(message);
+                    observableSubscriber.onComplete();
                 }
             });
         });
@@ -264,6 +265,6 @@ public class ChatSocketServiceImpl implements ChatSocketService{
 
     @Override
     public boolean isConnected() {
-        return isConnected;
+        return isConnected && mSocket.connected();
     }
 }

@@ -27,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.omi.socketiochat.R;
+import com.omi.socketiochat.compresser.PathUtil;
 import com.omi.socketiochat.main_activity.MainActivityMVP;
 import com.omi.socketiochat.main_activity.adapters.MessageAdapter;
 import com.omi.socketiochat.main_activity.utils.UserPref;
@@ -36,6 +37,8 @@ import com.omi.socketiochat.root.App;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -52,6 +55,8 @@ import io.socket.emitter.Emitter;
  * A chat fragment containing messages view and input form.
  */
 public class MainFragment extends Fragment implements MainActivityMVP.View {
+
+    private static final int PICK_IMAGE = 100;
 
     private static final String TAG = "MainFragment";
 
@@ -73,6 +78,12 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
 
     @BindView(R.id.message_input)
     EditText mInputMessageView;
+
+    @BindView(R.id.send_button)
+    ImageButton sendButton;
+
+    @BindView(R.id.pick_button)
+    ImageButton pickButton;
 
     public MainFragment() {
         super();
@@ -166,11 +177,17 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
             }
         });
 
-        ImageButton sendButton = view.findViewById(R.id.send_button);
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 attemptSend();
+            }
+        });
+
+        pickButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickImage();
             }
         });
 
@@ -181,6 +198,35 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
 
 
         presenter.connectToServer(mUsername);
+    }
+
+    private void pickImage() {
+        Intent getIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        getIntent.setType("image/*");
+
+        Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        pickIntent.setType("image/*");
+
+        Intent chooserIntent = Intent.createChooser(getIntent, "Select Image");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] {pickIntent});
+
+        startActivityForResult(chooserIntent, PICK_IMAGE);
+
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if (requestCode == PICK_IMAGE) {
+            if(data != null) {
+                try {
+                    presenter.compressImages(new File(PathUtil.getPath(getActivity() ,data.getData())));
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     @Override

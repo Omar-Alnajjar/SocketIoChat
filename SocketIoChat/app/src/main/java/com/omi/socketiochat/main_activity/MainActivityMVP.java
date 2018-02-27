@@ -4,6 +4,7 @@ package com.omi.socketiochat.main_activity;
 
 import com.omi.socketiochat.objects.Message;
 
+import java.io.File;
 import java.util.List;
 
 import io.reactivex.Completable;
@@ -47,6 +48,8 @@ public interface MainActivityMVP {
         boolean isConnected();
 
         void setView(MainActivityMVP.View view);
+
+        void compressImages(File imageFile);
     }
 
     interface Model {

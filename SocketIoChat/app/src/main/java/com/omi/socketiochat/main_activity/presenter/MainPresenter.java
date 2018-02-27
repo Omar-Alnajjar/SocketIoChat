@@ -2,11 +2,17 @@ package com.omi.socketiochat.main_activity.presenter;
 
 
 
+import android.content.Context;
+import android.os.Environment;
+
+import com.omi.socketiochat.compresser.Compressor;
 import com.omi.socketiochat.main_activity.MainActivityMVP;
 import com.omi.socketiochat.objects.Message;
 
 import org.reactivestreams.Subscription;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -23,10 +29,12 @@ public class MainPresenter implements MainActivityMVP.Presenter {
     private MainActivityMVP.Model model;
     private CompositeDisposable disposables;
     private List<Message> messages;
+    private Context context;
 
-    public MainPresenter(MainActivityMVP.Model model) {
+    public MainPresenter(MainActivityMVP.Model model, Context context) {
         this.model = model;
         disposables = new CompositeDisposable();
+        this.context = context;
     }
 
     @Override
@@ -70,7 +78,7 @@ public class MainPresenter implements MainActivityMVP.Presenter {
         if(messages != null) {
             for (Message message : messages) {
                 if (message.getUsername().equals(view.getUserName()) && message.getmStatus() == Message.STATUS_SENT) {
-                    model.newMessage(message);
+                    newMessage(message);
                 }
             }
         }
@@ -119,15 +127,14 @@ public class MainPresenter implements MainActivityMVP.Presenter {
     public void newMessage(Message message) {
         model.saveMessage(message);
 
-        disposables.add(model.newMessage(message).timeout(5, TimeUnit.SECONDS).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-
+        disposables.add(model.newMessage(message).timeout(10, TimeUnit.SECONDS).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
                 .subscribeWith(new DisposableObserver<Message>() {
                     @Override
                     public void onError(Throwable e) {
                         e.printStackTrace();
-                        if (view != null) {
-                            view.showSnackbar("Network error");
+                        if(isConnected()){
+                            newMessage(message);
                         }
 
                     }
@@ -328,5 +335,46 @@ public class MainPresenter implements MainActivityMVP.Presenter {
 
         this.view = view;
 
+    }
+
+    @Override
+    public void compressImages(File imageFile) {
+        try {
+            disposables.add(new Compressor(context)
+                    .setMaxHeight(900)
+                    .setMaxWidth(900)
+                    .setRadius(25)
+                    .setDestinationDirectoryPath(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "InfoApp" + File.separator + "Images")
+                    .compressToFile(imageFile).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread())
+
+
+                    .subscribeWith(new DisposableObserver<File[]>() {
+
+
+
+                        @Override
+                        public void onError(Throwable e) {
+                            e.printStackTrace();
+                            if (view != null) {
+                                view.showSnackbar("Error compressing images");
+                            }
+                        }
+
+                        @Override
+                        public void onComplete() {
+
+                        }
+
+
+                        @Override
+                        public void onNext(File[] files) {
+
+                            if(files.length > 0){
+                            }
+                        }
+                    }));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

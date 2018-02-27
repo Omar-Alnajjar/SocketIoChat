@@ -1,5 +1,7 @@
 package com.omi.socketiochat.main_activity;
 
+import android.content.Context;
+
 import com.omi.socketiochat.main_activity.model.MainModel;
 import com.omi.socketiochat.main_activity.model.MainRepository;
 import com.omi.socketiochat.main_activity.model.MainRepositoryImpl;
@@ -16,8 +18,8 @@ import dagger.Provides;
 public class MainModule {
 
     @Provides
-    public MainActivityMVP.Presenter provideMainActivityPresenter(MainActivityMVP.Model MainModel) {
-        return new MainPresenter(MainModel);
+    public MainActivityMVP.Presenter provideMainActivityPresenter(MainActivityMVP.Model MainModel, Context context) {
+        return new MainPresenter(MainModel, context);
     }
 
     @Provides
