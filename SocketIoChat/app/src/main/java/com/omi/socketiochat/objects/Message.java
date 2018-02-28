@@ -11,6 +11,7 @@ public class Message  extends RealmObject {
     public static final int TYPE_MESSAGE = 0;
     public static final int TYPE_LOG = 1;
     public static final int TYPE_ACTION = 2;
+    public static final int TYPE_MESSAGE_IMAGE = 3;
 
     public static final int STATUS_SENT = 0;
     public static final int STATUS_RECEIVED = 2;
@@ -21,6 +22,7 @@ public class Message  extends RealmObject {
     private String mMessage;
     private String mUsername;
     private int mStatus;
+    private int uploadPercent;
 
     public Message() {}
 
@@ -46,6 +48,14 @@ public class Message  extends RealmObject {
 
     public void setmStatus(int mStatus) {
         this.mStatus = mStatus;
+    }
+
+    public int getUploadPercent() {
+        return uploadPercent;
+    }
+
+    public void setUploadPercent(int uploadPercent) {
+        this.uploadPercent = uploadPercent;
     }
 
     public static class Builder {
@@ -85,6 +95,7 @@ public class Message  extends RealmObject {
             message.mId = mId;
             message.mUsername = mUsername;
             message.mMessage = mMessage;
+            message.mStatus = mStatus;
             return message;
         }
     }

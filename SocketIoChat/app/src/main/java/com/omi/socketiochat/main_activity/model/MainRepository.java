@@ -25,6 +25,7 @@ public interface MainRepository {
     Completable connectToServer(String mUsername);
     Completable disconnectFromServer();
     Observable<Message> newMessage(Message message);
+    Observable<Message> uploadImage(Message message);
     Completable typing(Message message);
     Completable stopTyping(Message message);
 
@@ -38,4 +39,5 @@ public interface MainRepository {
     Observable<Message> userLeftCallback();
 
     boolean isConnected();
+
 }

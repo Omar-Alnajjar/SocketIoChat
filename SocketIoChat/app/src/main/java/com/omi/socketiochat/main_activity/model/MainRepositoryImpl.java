@@ -59,6 +59,11 @@ public class MainRepositoryImpl implements MainRepository {
     }
 
     @Override
+    public Observable<Message> uploadImage(Message message) {
+        return chatSocketService.uploadImage(message);
+    }
+
+    @Override
     public Completable typing(Message message) {
         return chatSocketService.typing(message);
     }

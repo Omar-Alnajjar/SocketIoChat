@@ -22,6 +22,7 @@ public interface MainActivityMVP {
         void addTyping(String username);
         void removeTyping(String username);
         void addMessage(Message message);
+        void addImageMessage(Message message);
         String getUserName();
 
     }
@@ -36,6 +37,7 @@ public interface MainActivityMVP {
         void newMessage(Message message);
         void typing(Message message);
         void stopTyping(Message message);
+        void uploadImage(Message message);
 
         void newMessageCallback();
         void typingCallback();
@@ -69,6 +71,7 @@ public interface MainActivityMVP {
         Completable disconnectFromServer();
 
         Observable<Message> newMessage(Message message);
+        Observable<Message> uploadImage(Message message);
         Completable typing(Message message);
         Completable stopTyping(Message message);
 

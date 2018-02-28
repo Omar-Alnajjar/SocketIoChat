@@ -44,6 +44,11 @@ public class MainModel implements MainActivityMVP.Model {
     }
 
     @Override
+    public Observable<Message> uploadImage(Message message) {
+        return repository.uploadImage(message);
+    }
+
+    @Override
     public Completable typing(Message message) {
         return repository.typing(message);
     }

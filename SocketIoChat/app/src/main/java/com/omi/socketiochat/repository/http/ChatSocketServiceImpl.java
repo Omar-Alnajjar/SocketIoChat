@@ -6,11 +6,14 @@ import android.content.Context;
 import android.util.Log;
 
 import com.omi.socketiochat.R;
+import com.omi.socketiochat.main_activity.utils.FileUploadManager;
 import com.omi.socketiochat.objects.Message;
 import com.omi.socketiochat.root.App;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.IOException;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -34,10 +37,12 @@ public class ChatSocketServiceImpl implements ChatSocketService{
     private Emitter.Listener onUserJoined;
     private Emitter.Listener onUserLeft;
 
+    private FileUploadManager mFileUploadManager;
 
 
     public ChatSocketServiceImpl(Context context) {
         this.context = context;
+        mFileUploadManager = new FileUploadManager();
     }
 
     @Override
@@ -99,6 +104,64 @@ public class ChatSocketServiceImpl implements ChatSocketService{
                     observableSubscriber.onComplete();
                 }
             });
+        });
+    }
+
+    @Override
+    public Observable<Message> uploadImage(Message message) {
+        mFileUploadManager.prepare(message.getMessage(), context);
+
+        JSONObject res = new JSONObject();
+        try {
+            res.put("Name", mFileUploadManager.getFileName());
+            res.put("Size", mFileUploadManager.getFileSize());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        // This will trigger server 'uploadFileStart' function
+        mSocket.emit("uploadFileStart", res);
+
+        return Observable.create(observableSubscriber -> {
+
+
+            Emitter.Listener onUploadMoreData = new Emitter.Listener() {
+                @Override
+                public void call(final Object... args) {
+                    try {
+                        JSONObject json_data = ((JSONObject)args[0]);
+                        int place = json_data.getInt("Place");
+                        int percent = json_data.getInt("Percent");
+
+                        message.setUploadPercent(percent);
+                        observableSubscriber.onNext(message);
+                        // Read the next chunk
+                        mFileUploadManager.read(place);
+
+                        JSONObject res = new JSONObject();
+
+                        res.put("Name", mFileUploadManager.getFileName());
+                        res.put("Data", mFileUploadManager.getData());
+                        res.put("chunkSize", mFileUploadManager.getBytesRead());
+
+                        // This will trigger server 'uploadFileChuncks' function
+                        mSocket.emit("uploadFileChuncks", res);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+            Emitter.Listener onUploadComplete = new Emitter.Listener() {
+                @Override
+                public void call(final Object... args) {
+                    mFileUploadManager.close();
+                    observableSubscriber.onComplete();
+                }
+            };
         });
     }
 

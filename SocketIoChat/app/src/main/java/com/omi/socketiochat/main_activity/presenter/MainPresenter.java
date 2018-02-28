@@ -127,7 +127,7 @@ public class MainPresenter implements MainActivityMVP.Presenter {
     public void newMessage(Message message) {
         model.saveMessage(message);
 
-        disposables.add(model.newMessage(message).timeout(10, TimeUnit.SECONDS).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+        disposables.add(model.newMessage(message).timeout(30, TimeUnit.SECONDS).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
                 .subscribeWith(new DisposableObserver<Message>() {
                     @Override
@@ -162,6 +162,36 @@ public class MainPresenter implements MainActivityMVP.Presenter {
     @Override
     public void stopTyping(Message message) {
         model.stopTyping(message);
+    }
+
+    @Override
+    public void uploadImage(Message message) {
+        disposables.add(model.uploadImage(message).timeout(5, TimeUnit.SECONDS).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+
+
+                .subscribeWith(new DisposableObserver<Message>() {
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        if (view != null) {
+                            view.showSnackbar("Network error");
+                        }
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+
+
+                    @Override
+                    public void onNext(Message message) {
+                        if (view != null && message != null)  {
+                            model.saveMessage(message);
+                        }
+                    }
+                }));
     }
 
     @Override
@@ -370,6 +400,7 @@ public class MainPresenter implements MainActivityMVP.Presenter {
                         public void onNext(File[] files) {
 
                             if(files.length > 0){
+
                             }
                         }
                     }));

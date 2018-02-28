@@ -130,6 +130,7 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
         super.onDestroy();
 
         presenter.disconnectFromServer();
+        presenter.rxUnsubscribe();
     }
 
     @Override
@@ -241,6 +242,11 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
         mMessages.add(message);
         mAdapter.notifyItemInserted(mMessages.size() - 1);
         scrollToBottom();
+    }
+
+    @Override
+    public void addImageMessage(Message message) {
+
     }
 
     @Override
