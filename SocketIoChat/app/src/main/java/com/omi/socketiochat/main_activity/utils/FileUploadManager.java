@@ -19,8 +19,22 @@ public class FileUploadManager {
 	private BufferedInputStream stream;
 	private String mData;
 	private int mBytesRead;
-	
-	public boolean prepare(String fullFilePath, Context context) {
+	private int chunkSize;
+
+	public FileUploadManager(Context context) {
+		String type = Constants.haveNetworkConnection(context);
+		if(!type.equals("null")){
+			if(type.equals("wifi") || type.equals("4g")){
+				chunkSize = 4096;
+			}else if(type.equals("3g")){
+				chunkSize = 2048;
+			}else {
+				chunkSize = 1024;
+			}
+		}
+	}
+
+	public boolean prepare(String fullFilePath) {
 		mFile = new File(fullFilePath);
 		mFileSize = mFile.length();
 		
@@ -49,13 +63,14 @@ public class FileUploadManager {
 		return mData;
 	}
 	
-	public void read(int byteOffset) throws IOException {
+	public void read() throws IOException {
 	    ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
-		byte[] buffer = new byte[4096];
+		byte[] buffer = new byte[chunkSize];
 		
 		mBytesRead = stream.read(buffer);
-		        
-		byteBuffer.write(buffer, 0, mBytesRead);
+		if(mBytesRead != -1) {
+			byteBuffer.write(buffer, 0, mBytesRead);
+		}
 		Log.v(TAG, "Read :" + mBytesRead);
 
 		mData = Base64.encodeToString(byteBuffer.toByteArray(), Base64.DEFAULT);

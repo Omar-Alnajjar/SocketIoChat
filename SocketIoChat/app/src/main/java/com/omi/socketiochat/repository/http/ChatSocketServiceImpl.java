@@ -6,6 +6,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.omi.socketiochat.R;
+import com.omi.socketiochat.main_activity.utils.FileDownloadManager;
 import com.omi.socketiochat.main_activity.utils.FileUploadManager;
 import com.omi.socketiochat.objects.Message;
 import com.omi.socketiochat.root.App;
@@ -14,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Calendar;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -38,11 +40,11 @@ public class ChatSocketServiceImpl implements ChatSocketService{
     private Emitter.Listener onUserLeft;
 
     private FileUploadManager mFileUploadManager;
+    private FileDownloadManager mFileDownloadManager;
 
 
     public ChatSocketServiceImpl(Context context) {
         this.context = context;
-        mFileUploadManager = new FileUploadManager();
     }
 
     @Override
@@ -109,12 +111,14 @@ public class ChatSocketServiceImpl implements ChatSocketService{
 
     @Override
     public Observable<Message> uploadImage(Message message) {
-        mFileUploadManager.prepare(message.getMessage(), context);
+        mFileUploadManager = new FileUploadManager(context);
+        mFileUploadManager.prepare(message.getMessage());
 
         JSONObject res = new JSONObject();
         try {
             res.put("Name", mFileUploadManager.getFileName());
             res.put("Size", mFileUploadManager.getFileSize());
+            res.put("username", mUsername);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -136,7 +140,7 @@ public class ChatSocketServiceImpl implements ChatSocketService{
                         message.setUploadPercent(percent);
                         observableSubscriber.onNext(message);
                         // Read the next chunk
-                        mFileUploadManager.read(place);
+                        mFileUploadManager.read();
 
                         JSONObject res = new JSONObject();
 
@@ -159,9 +163,15 @@ public class ChatSocketServiceImpl implements ChatSocketService{
                 @Override
                 public void call(final Object... args) {
                     mFileUploadManager.close();
+
+                    message.setmStatus(Message.STATUS_RECEIVED);
+                    observableSubscriber.onNext(message);
                     observableSubscriber.onComplete();
                 }
             };
+
+            mSocket.on("uploadFileMoreDataReq", onUploadMoreData);
+            mSocket.on("uploadFileCompleteRes", onUploadComplete);
         });
     }
 
@@ -309,6 +319,63 @@ public class ChatSocketServiceImpl implements ChatSocketService{
             };
             mSocket.on("user left", onUserLeft);
         });
+    }
+
+    @Override
+    public Observable<Message> newMessageImageCallback() {
+
+        Emitter.Listener onDownloadStart = new Emitter.Listener() {
+            @Override
+            public void call(final Object... args) {
+                JSONObject data = (JSONObject) args[0];
+
+                String fileName = null;
+                String userName = null;
+                try {
+                    fileName = data.getString("fileName");
+                    userName = data.getString("username");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                mFileDownloadManager = new FileDownloadManager();
+                mFileDownloadManager.setUsername(userName);
+                try {
+                    mFileDownloadManager.prepare(fileName);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        Emitter.Listener onDownloadMore = new Emitter.Listener() {
+            @Override
+            public void call(final Object... args) {
+                String data = (String) args[0];
+                try {
+                    mFileDownloadManager.write(data);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        mSocket.on("downloadStart", onDownloadStart);
+        mSocket.on("downloadMore", onDownloadMore);
+
+        return Observable.create(observableSubscriber -> {
+            Emitter.Listener onDownloadComplete = new Emitter.Listener() {
+                @Override
+                public void call(final Object... args) {
+                    mFileDownloadManager.close();
+                    observableSubscriber.onNext(new Message.Builder(Message.TYPE_MESSAGE_IMAGE).id("id"+ Calendar.getInstance().getTimeInMillis())
+                    .message(mFileDownloadManager.getFilePath()).username(mFileDownloadManager.getUsername()).status(Message.STATUS_RECEIVED).build());
+                    observableSubscriber.onComplete();
+                }
+            };
+            mSocket.on("downloadComplete", onDownloadComplete);
+        });
+
     }
 
     private Emitter.Listener onDisconnect = new Emitter.Listener() {

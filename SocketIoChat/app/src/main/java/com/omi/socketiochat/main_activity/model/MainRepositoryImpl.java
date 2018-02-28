@@ -99,6 +99,11 @@ public class MainRepositoryImpl implements MainRepository {
     }
 
     @Override
+    public Observable<Message> newMessageImageCallback() {
+        return chatSocketService.newMessageImageCallback();
+    }
+
+    @Override
     public boolean isConnected() {
         return chatSocketService.isConnected();
     }

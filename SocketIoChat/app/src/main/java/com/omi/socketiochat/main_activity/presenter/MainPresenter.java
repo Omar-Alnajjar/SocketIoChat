@@ -78,7 +78,11 @@ public class MainPresenter implements MainActivityMVP.Presenter {
         if(messages != null) {
             for (Message message : messages) {
                 if (message.getUsername().equals(view.getUserName()) && message.getmStatus() == Message.STATUS_SENT) {
-                    newMessage(message);
+                    if(message.getType() == Message.TYPE_MESSAGE) {
+                        newMessage(message);
+                    }else if(message.getType() == Message.TYPE_MESSAGE_IMAGE) {
+                        uploadImage(message);
+                    }
                 }
             }
         }
@@ -116,6 +120,7 @@ public class MainPresenter implements MainActivityMVP.Presenter {
         userLeftCallback();
         typingCallback();
         stopTypingCallback();
+        newMessageImageCallback();
     }
 
     @Override
@@ -127,7 +132,7 @@ public class MainPresenter implements MainActivityMVP.Presenter {
     public void newMessage(Message message) {
         model.saveMessage(message);
 
-        disposables.add(model.newMessage(message).timeout(30, TimeUnit.SECONDS).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+        disposables.add(model.newMessage(message).timeout(10, TimeUnit.SECONDS).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
                 .subscribeWith(new DisposableObserver<Message>() {
                     @Override
@@ -166,7 +171,8 @@ public class MainPresenter implements MainActivityMVP.Presenter {
 
     @Override
     public void uploadImage(Message message) {
-        disposables.add(model.uploadImage(message).timeout(5, TimeUnit.SECONDS).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+        model.saveMessage(message);
+        disposables.add(model.uploadImage(message).timeout(30, TimeUnit.SECONDS).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
 
                 .subscribeWith(new DisposableObserver<Message>() {
@@ -181,13 +187,18 @@ public class MainPresenter implements MainActivityMVP.Presenter {
 
                     @Override
                     public void onComplete() {
-
+                        if (view != null && message != null)  {
+                            view.showSnackbar("Completed!");
+                        }
                     }
 
 
                     @Override
                     public void onNext(Message message) {
                         if (view != null && message != null)  {
+                            view.showSnackbar(message.getUploadPercent()+"");
+                        }
+                        if(message.getmStatus() == Message.STATUS_RECEIVED){
                             model.saveMessage(message);
                         }
                     }
@@ -220,7 +231,7 @@ public class MainPresenter implements MainActivityMVP.Presenter {
                         if (view != null && message != null)  {
                             view.removeTyping(message.getUsername());
                             view.addMessage(message);
-                            if(message.getType() == Message.TYPE_MESSAGE) {
+                            if(message.getType() == Message.TYPE_MESSAGE || message.getType() == Message.TYPE_MESSAGE_IMAGE) {
                                 message.setmStatus(Message.STATUS_RECEIVED);
                                 model.saveMessage(message);
                             }
@@ -351,6 +362,41 @@ public class MainPresenter implements MainActivityMVP.Presenter {
     }
 
     @Override
+    public void newMessageImageCallback() {
+        disposables.add(model.newMessageImageCallback().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+
+
+                .subscribeWith(new DisposableObserver<Message>() {
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        if (view != null) {
+                            view.showSnackbar("Network error");
+                        }
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+
+
+                    @Override
+                    public void onNext(Message message) {
+                        if (view != null && message != null)  {
+                            view.removeTyping(message.getUsername());
+                            view.addMessage(message);
+                            if(message.getType() == Message.TYPE_MESSAGE || message.getType() == Message.TYPE_MESSAGE_IMAGE) {
+                                message.setmStatus(Message.STATUS_RECEIVED);
+                                model.saveMessage(message);
+                            }
+                        }
+                    }
+                }));
+    }
+
+    @Override
     public void rxUnsubscribe() {
         disposables.dispose();
     }
@@ -374,8 +420,7 @@ public class MainPresenter implements MainActivityMVP.Presenter {
                     .setMaxHeight(900)
                     .setMaxWidth(900)
                     .setRadius(25)
-                    .setDestinationDirectoryPath(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "InfoApp" + File.separator + "Images")
-                    .compressToFile(imageFile).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread())
+                    .compressToFile(imageFile).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
 
                     .subscribeWith(new DisposableObserver<File[]>() {
@@ -398,9 +443,8 @@ public class MainPresenter implements MainActivityMVP.Presenter {
 
                         @Override
                         public void onNext(File[] files) {
-
                             if(files.length > 0){
-
+                                view.addImageMessage(files[0]);
                             }
                         }
                     }));

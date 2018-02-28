@@ -85,6 +85,11 @@ public class MainModel implements MainActivityMVP.Model {
         return repository.userLeftCallback();
     }
 
+    @Override
+    public Observable<Message> newMessageImageCallback() {
+        return repository.newMessageImageCallback();
+    }
+
 
     @Override
     public boolean isConnected() {

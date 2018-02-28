@@ -37,6 +37,7 @@ public interface MainRepository {
     Observable<Message> stopTypingCallback();
     Observable<Message> userJoinedCallback();
     Observable<Message> userLeftCallback();
+    Observable<Message> newMessageImageCallback();
 
     boolean isConnected();
 

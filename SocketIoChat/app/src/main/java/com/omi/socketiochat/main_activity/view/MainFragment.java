@@ -1,11 +1,15 @@
 package com.omi.socketiochat.main_activity.view;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -62,6 +66,7 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
 
 
     private static final int TYPING_TIMER_LENGTH = 600;
+    private static final int REQUEST_WRITE_EXTERNAL = 1111;
     private List<Message> mMessages = new ArrayList<Message>();
     private RecyclerView.Adapter mAdapter;
     private boolean mTyping = false;
@@ -106,6 +111,11 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (getActivity().checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(getActivity(), new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_EXTERNAL);
+            }
+        }
         UserPref userPref = new UserPref(getActivity());
         if(userPref.getUsername() == null){
             mUsername = "user "+ Calendar.getInstance().getTimeInMillis();
@@ -245,8 +255,9 @@ public class MainFragment extends Fragment implements MainActivityMVP.View {
     }
 
     @Override
-    public void addImageMessage(Message message) {
-
+    public void addImageMessage(File file) {
+        presenter.uploadImage(new Message.Builder(Message.TYPE_MESSAGE_IMAGE).id("id"+Calendar.getInstance().getTimeInMillis())
+                .username(mUsername).message(file.getAbsolutePath()).status(Message.STATUS_SENT).build());
     }
 
     @Override

@@ -22,7 +22,7 @@ public interface MainActivityMVP {
         void addTyping(String username);
         void removeTyping(String username);
         void addMessage(Message message);
-        void addImageMessage(Message message);
+        void addImageMessage(File file);
         String getUserName();
 
     }
@@ -44,6 +44,7 @@ public interface MainActivityMVP {
         void stopTypingCallback();
         void userJoinedCallback();
         void userLeftCallback();
+        void newMessageImageCallback();
 
         void rxUnsubscribe();
 
@@ -66,6 +67,7 @@ public interface MainActivityMVP {
         Observable<Message> stopTypingCallback();
         Observable<Message> userJoinedCallback();
         Observable<Message> userLeftCallback();
+        Observable<Message> newMessageImageCallback();
 
         Completable connectToServer(String mUsername);
         Completable disconnectFromServer();
