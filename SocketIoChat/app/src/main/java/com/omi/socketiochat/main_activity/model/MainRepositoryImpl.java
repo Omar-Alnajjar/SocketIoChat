@@ -3,7 +3,7 @@ package com.omi.socketiochat.main_activity.model;
 
 
 import com.omi.socketiochat.objects.Message;
-import com.omi.socketiochat.repository.dp.InfoLocalStorage;
+import com.omi.socketiochat.repository.dp.ChatLocalStorage;
 import com.omi.socketiochat.repository.http.ChatSocketService;
 
 import java.util.List;
@@ -15,22 +15,17 @@ import io.reactivex.Observable;
 public class MainRepositoryImpl implements MainRepository {
 
     private ChatSocketService chatSocketService;
-    private InfoLocalStorage infoLocalStorage;
+    private ChatLocalStorage chatLocalStorage;
 
-    public MainRepositoryImpl(ChatSocketService chatSocketService, InfoLocalStorage infoLocalStorage) {
+    public MainRepositoryImpl(ChatSocketService chatSocketService, ChatLocalStorage chatLocalStorage) {
         this.chatSocketService = chatSocketService;
-        this.infoLocalStorage = infoLocalStorage;
+        this.chatLocalStorage = chatLocalStorage;
     }
 
 
     @Override
     public Maybe<List<Message>> getResultsFromMemory(String lastId) {
-        return infoLocalStorage.getInfo();
-    }
-
-    @Override
-    public Maybe<List<Message>> getResultsFromNetwork(String lastId) {
-        return Maybe.empty();
+        return chatLocalStorage.getMessages();
     }
 
     @Override
@@ -40,7 +35,7 @@ public class MainRepositoryImpl implements MainRepository {
 
     @Override
     public Observable<Message> saveMessageToDB(Message message) {
-        return infoLocalStorage.saveMessage(message);
+        return chatLocalStorage.saveMessage(message);
     }
 
     @Override

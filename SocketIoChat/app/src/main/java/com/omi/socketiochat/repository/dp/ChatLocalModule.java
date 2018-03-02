@@ -7,13 +7,13 @@ import dagger.Module;
 import dagger.Provides;
 
 @Module
-public class InfoLocalModule {
+public class ChatLocalModule {
 
 
     @Singleton
     @Provides
-    InfoLocalStorage provideInfoDataSource() {
-        return new InfoLocalStorageImpl();
+    ChatLocalStorage provideChatDataSource() {
+        return new ChatLocalStorageImpl();
     }
 
 }

@@ -9,9 +9,9 @@ import java.util.List;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 
-public interface InfoLocalStorage {
+public interface ChatLocalStorage {
 
-    Maybe<List<Message>> getInfo();
+    Maybe<List<Message>> getMessages();
     Observable<Message> saveMessage(Message message);
 
 }

@@ -14,8 +14,6 @@ public interface MainRepository {
 
     Maybe<List<Message>> getResultsFromMemory(String last);
 
-    Maybe<List<Message>> getResultsFromNetwork(String lastId);
-
     Observable<List<Message>> getResults(String lastId);
 
 

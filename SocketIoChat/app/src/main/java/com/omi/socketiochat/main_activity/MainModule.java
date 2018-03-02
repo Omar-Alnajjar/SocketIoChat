@@ -6,7 +6,7 @@ import com.omi.socketiochat.main_activity.model.MainModel;
 import com.omi.socketiochat.main_activity.model.MainRepository;
 import com.omi.socketiochat.main_activity.model.MainRepositoryImpl;
 import com.omi.socketiochat.main_activity.presenter.MainPresenter;
-import com.omi.socketiochat.repository.dp.InfoLocalStorage;
+import com.omi.socketiochat.repository.dp.ChatLocalStorage;
 import com.omi.socketiochat.repository.http.ChatSocketService;
 
 import javax.inject.Singleton;
@@ -29,8 +29,8 @@ public class MainModule {
 
     @Singleton
     @Provides
-    public MainRepository provideRepo(ChatSocketService chatSocketService, InfoLocalStorage infoLocalStorage) {
-        return new MainRepositoryImpl(chatSocketService, infoLocalStorage);
+    public MainRepository provideRepo(ChatSocketService chatSocketService, ChatLocalStorage chatLocalStorage) {
+        return new MainRepositoryImpl(chatSocketService, chatLocalStorage);
     }
 
 

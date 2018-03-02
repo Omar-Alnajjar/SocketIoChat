@@ -4,7 +4,7 @@ import android.app.Application;
 
 import com.omi.socketiochat.main_activity.MainModule;
 import com.omi.socketiochat.main_activity.utils.Constants;
-import com.omi.socketiochat.repository.dp.InfoLocalModule;
+import com.omi.socketiochat.repository.dp.ChatLocalModule;
 import com.omi.socketiochat.repository.http.ChatSocketModule;
 
 import java.net.URISyntaxException;
@@ -38,7 +38,7 @@ public class App extends Application {
         component = DaggerApplicationComponent.builder()
                 .applicationModule(new ApplicationModule(this))
                 .chatSocketModule(new ChatSocketModule())
-                .infoLocalModule(new InfoLocalModule())
+                .chatLocalModule(new ChatLocalModule())
                 .mainModule(new MainModule())
                 .build();
 

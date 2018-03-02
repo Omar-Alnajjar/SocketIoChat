@@ -11,15 +11,15 @@ import io.reactivex.Observable;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class InfoLocalStorageImpl implements InfoLocalStorage {
+public class ChatLocalStorageImpl implements ChatLocalStorage {
 
 
-    public InfoLocalStorageImpl() {
+    public ChatLocalStorageImpl() {
 
     }
 
     @Override
-    public Maybe<List<Message>> getInfo() {
+    public Maybe<List<Message>> getMessages() {
         Realm realm = Realm.getDefaultInstance();
         try {
             RealmResults<Message> dataObjects = realm.where(Message.class).findAll();
